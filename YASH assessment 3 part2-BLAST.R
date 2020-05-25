@@ -26,10 +26,13 @@ seqinr::getLength(myEcoli)
 #calculate GC content
 seqinr::GC(myEcoli)
 
+
 # Question 3
+
+#sourced the function that ran blast searches in R
 download.file("https://raw.githubusercontent.com/markziemann/SLE712_files/master/bioinfo_asst3_part2_files/mutblast_functions.R",destfile = "mutblast.R")
 source("mutblast.R")
-
+myblastn_tab
 #test the function
 res<-myblastn_tab(myseq = myEcoli,db= "Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
 str(res)
