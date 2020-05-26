@@ -1,0 +1,93 @@
+---
+title: "SLE712 Assessment 3- Part 1(2)-Importing files, data wrangling, mathematical operations, plots and saving code on GitHub"
+author: "Yasodha Jayawardena & Dhanusha Weerawardana "
+output: html_document
+theme: cosmo 
+---
+
+## Question No:6
+Here we use "growth_data.csv" file that contains measurements for tree circumference growing at two sites, control site and treatment site which were planted 20 years ago. Firstly, `download.file()` command use to obtain the dataset and then read into R as `read.csv`. It is important to set `header=TRUE` if the data file has headings, and `stringAsFactors=FALSE` if the table contains data in strings. Lastly, check if csv file is imported properly.
+```{r,chunk1, echo=TRUE}
+# Downlod the data file of "growth_data.csv"
+download.file("https://raw.githubusercontent.com/markziemann/SLE712_files/master/bioinfo_asst3_part1_files/growth_data.csv",destfile="growth_data.csv")
+
+# Read into R
+y <- read.csv("growth_data.csv", header=TRUE, sep="," ,stringsAsFactors = FALSE)
+# Lets check if the data has been imported properly
+head(y)
+str(y)
+```
+### Colnames
+```{r,chunk2,echo=TRUE}
+#column names of data set
+colnames(y)
+```
+
+## Question No:7
+The file "growth_data.csv" containes two sites (northeast and southwest). So, here we use `subset` command to subset different tree circumference and read "northeast" and "southwest" sites as NE and SW respectively. Use `head` command to check if they imported properly.
+```{r,chunk3,echo=TRUE}
+#Seperate tree circumference in both sites
+NE<-subset(y,Site=="northeast")
+SW<-subset(y,Site=="southwest")
+head(NE)
+head(SW)
+```
+
+The mean and standard deviation of tree circumference is calculating with `mean` and `sd` commands at start (2004) and end of the study (2019) in both sites.
+```{r,chunk4,echo=TRUE}
+#Mean of tree circumference in northeast site at start(2004)
+mean(NE$Circumf_2004_cm)
+#Standard deviation of tree circumference in northeast site at start(2004)
+sd(NE$Circumf_2004_cm)
+#Mean of tree circumference in southwest site at start(2004)
+mean(SW$Circumf_2004_cm)
+#Standard deviation of tree circumference in southwest at start(2004)
+sd(SW$Circumf_2004_cm)
+#Mean of tree circumference in northeast site at end(2019)
+mean(NE$Circumf_2019_cm)
+#Standard deviation of tree circumference in northeast site at end(2019)
+sd(NE$Circumf_2019_cm)
+#Mean of tree circumference in southwest site at end(2019)
+mean(SW$Circumf_2019_cm)
+#Standard deviation of tree circumference in southwest site at end(2019)
+sd(SW$Circumf_2019_cm)
+```
+
+## Question No:8
+Create boxplot of Circumference (cm) at the start(2004) and end (2019) of the both sites.
+```{r, chunk5,echo=TRUE}
+boxplot(NE$Circumf_2004_cm,NE$Circumf_2019_cm,SW$Circumf_2004_cm,SW$Circumf_2019_cm,ylab="Circumference(cm)",names=c("NE2004","SW2004","NE2019","SW2019"), main="Growth of Two Plantation Sites",las=2,col=c("yellow","blue"),border = "red",ntch=TRUE)
+```
+
+## Question No:9
+Here make a new column with mean growth over the past 10 years at each site and use `head` command to look at the first 6 lines of the dataframe.
+```{r,chunk6,echo=TRUE}
+# Mean growth of past 10 yeras at noetheast site
+NE$growth<-NE$Circumf_2019_cm-NE$Circumf_2009_cm
+head(NE)
+# Mean growth of past 10 yeras at southwest site
+SW$growth<-SW$Circumf_2019_cm-SW$Circumf_2009_cm
+head(SW)
+```
+The plot shows that the meangrowth increase in circumference of noetheast site is close to 0 at strat and end, while the meangrowth circumference of southwest site i sclose to 40 and 60 at start and end respectively. So, based on that data it seems tree circumference of soutwest site is higher than northeast site at both start and end. 
+
+## Question No:10
+t.test and wilcox.test use to determine wheather our finding is statistically significant. Here, the null hypothesis of the test is that there are no significant difference in the tree circumference between the two sites growth in past 10 years. Thus, the alternative hypothesis is that southeast site is assosiated with greater values of growth circumference than northeast site at past 10 yeras.
+
+* t.test
+p-value from t.test= 1.713e-06
+```{r,chunk7,echo=TRUE}
+#Use t.test to estimate the p-value for 10 years growth at 2 sites
+t.test(SW$growth,NE$growth)
+```
+
+* wilcox.test
+p-value from wilcox.test= 4.626e-06
+```{r,chunk8,echo=TRUE}
+#Use wilcox.test to estimate the p-value for 10 years growth at 2 sites
+wilcox.test(SW$growth,NE$growth)
+```
+
+Since, both tests show the p-value is less than 5% significant level, this means we can reject the null hypothesis. So, we would be inclined to accept the alternative hypothesis, which states that tree growth of southwest site is higher than northeast site in past 10 yeras. Also, the p-value from two tests are slightly different with the reason of t.test is parametric and wilcox.test is  non-parametric. 
+
+
