@@ -1,0 +1,147 @@
+---
+title:"SLE712 Assessment 3- Part 2-Determine the limits of BLAST"
+author:"Yasodha Suharshi & "
+output:html_document
+theme: cosmo 
+---
+
+
+#Introduction
+
+
+## Prerequisite libraries
+There are three packages that we will need to get things working. 
+`seqinr` package designed for sequence data procesing and analysis
+`R.utils` package designed for extract data from compressed files
+`rBLAST` package provide R interface for BLAST search
+Additionally, we source two functions which supplied for this practical to perform an analysis into the limits of BLAST. 
+```{r,chunk1,echo=TRUE}
+#libraries that we need
+library("seqinr")
+library("R.utils")
+library("rBLAST")
+#Whole set of E.coli genes
+source("ftp://ftp.ensemblgenomes.org/pub/bacteria/release-42/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655/cds/Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa.gz") 
+#Allocated gene sequence (sequence no:56)
+source("https://raw.githubusercontent.com/markziemann/SLE712_files/master/bioinfo_asst3_part2_files/sample.fa")
+```
+
+## Question No:1
+Here we are used the `download.file()` command to obtain the E.coli dataset from ensemble FTP page and then we are decompress the file using gunzip command. `makeblast()` function use to creat a BLAST database.
+*Number of sequences are present in the E.coli set= 4140
+```{r,chunk2,echo=TRUE}
+#Download the E.coli gene sequency from the Ensemble FTP page
+download.file("ftp://ftp.ensemblgenomes.org/pub/bacteria/release-42/fasta/bacteria_0_collection/escherichia_coli_str_k_12_substr_mg1655/cds/Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa.gz", destfile = "Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa.gz")
+#use gunzip to uncompress the file
+gunzip("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa.gz",overwrite=TRUE)
+#create a blast database with makeblast function
+makeblastdb("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa",dbtype = "nucl","-parse_seqids")
+```
+
+## Question No:2
+Here we are used the `download.file()` command to obtain the sample file and then read it into R. The `str` use to determine data structure. Next select allocated sequence 56 and read it as "myEcoli" and check its structure. 
+Determine length and propotion of GC bases in allocated sequence by using `getLength()` command and `GC()` command respectively.
+*Length=276 bp
+*The propotion of GC bases= 0.5326087
+```{r,chunk3,echo=TRUE}
+#Download sample file
+download.file("https://raw.githubusercontent.com/markziemann/SLE712_files/master/bioinfo_asst3_part2_files/sample.fa", destfile = "sample.fa")
+#Read file into R as Ecoli
+Ecoli<-read.fasta("sample.fa")
+str(Ecoli) #check data structure
+#Read my allocated sequence (56) into R as myEcoli
+myEcoli<-Ecoli[[56]]
+#Lets check if the data has been imported properly
+myEcoli
+str(myEcoli)
+
+#calculate length for my allocated gene
+seqinr::getLength(myEcoli)
+#calculate GC content for my allocated gene
+seqinr::GC(myEcoli)
+```
+
+## Question No:3
+
+```{r,chunk4,echo=TRUE}
+#sourced the function that ran blast searches in R
+download.file("https://raw.githubusercontent.com/markziemann/SLE712_files/master/bioinfo_asst3_part2_files/mutblast_functions.R",destfile = "mutblast.R")
+source("mutblast.R")
+#test the function
+res<-myblastn_tab(myseq = myEcoli,db= "Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
+#have a look at the blast results
+head(res)
+str(res)
+```
+
+```{r,chunk5,echo=TRUE}
+###first three hits
+hits <-as.character(res$sseqid[1:3])
+hits
+```
+
+
+
+```{r,chunk6,echo=TRUE}
+#identify what E.coil gene matches best
+db<-read.fasta("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
+str(db)
+head(names(db))
+head(db)
+
+#extract the names of the top hit percent identity, E-value and bit score
+tophits <- db[which(names(db) %in% hits[1])]
+tophit[1:3]
+
+seqinr::write.fasta(tophit,names=names(tophit),file.out = "tophit.fa")
+makeblastdb("tophit.fa", dbtype = "nucl","-parse_seqids")
+res <- myblastn(myseq = myEcoli, db= "tophit.fa")
+res
+cat(res,fill=TRUE)
+
+```
+
+##Question No:4
+```{r,chunk7, echo=TRUE}
+#create a mutated copy with 30 substitutions
+myEcolimutator<- mutator(myEcoli,30)
+res <- myblastn_tab(myseq = myEcolimutator, db= "tophit.fa")
+res
+```
+
+##Question 5
+```{r,chunk8,echo=TRUE}
+#test with mismatches
+myEcolimutator <- mutator(myEcoli,10)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,20)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,30)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,40)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,50)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,60)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,70)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+
+myEcolimutator <- mutator(myEcoli,80)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+```
+
+
