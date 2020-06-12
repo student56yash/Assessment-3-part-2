@@ -46,50 +46,78 @@ str(res)
 hits <-as.character(res$sseqid[1:3])
 hits
 
-#identify what E.coil gene matches best
-db<-read.fasta("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
+#identify what E.coil gene matches best and the tophits
+db <- read.fasta("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
 str(db)
 head(names(db))
-head(db)
+myseqs <- db[which(names(db) %in% hits)] # extract the names of the top hits
+myseqs <- c(myseqs,Ecoli) # add the Ecoli sequence
+seqinr::write.fasta(myseqs,names=names(myseqs),file.out = "myseqs.fa")
 
-#Question 4
-
-seqinr::write.fasta(myEcoli,names="myEcoli",file.out = "myEcoli.fa")
-makeblastdb("myEcoli.fa", dbtype = "nucl","-parse_seqids")
-res <- myblastn(myseq = myEcoli, db= "myEcoli.fa")
+#extract the names of the top hit percent identity, E-value and bit score
+tophits <- db[which(names(db) %in% hits[1])]
+tophit[1:3]
+seqinr::write.fasta(tophit,names=names(tophit),file.out = "tophit.fa")
+makeblastdb("tophit.fa", dbtype = "nucl","-parse_seqids")
+res <- myblastn(myseq = myEcoli, db= "tophit.fa")
 res
 cat(res,fill=TRUE)
 
+
+#Question 4
+
 #create a mutated copy with 30 substitutions
 myEcolimutator<- mutator(myEcoli,30)
-res <- myblastn_tab(myseq = myEcolimutator, db= "myEcoli.fa")
+res <- myblastn_tab(myseq = myEcolimutator, db= "tophit.fa")
 res
 
 
-#Question 5
+#Question 5 
 
-#test with mismatches
-myEcolimutator <- mutator(myEcoli,20)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+mutator #randomize with mutator
+myblastn_tab
+#create a function to summerise the result and report as a 0 or 1
+myfunc <- function (myseq,nmut){
+  mutseq <- mutator(myseq=myseq,nmut=nmut)
+  res<-myblastn_tab(myseq=mutseq, db= "Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
+  if(is.null(res)){myres=0} else {myres=1}
+  return(myres)}
 
-myEcolimutator <- mutator(myEcoli,30)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+#test the function
+myfunc(myseq=myEcoli,nmut=50)
+#repeat this routine 100 times to grt accurate result
+replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=50))
+#summerise result to decimal number(between 0 and 1),to get a propostion of how many BLASTs were successful
+mean (replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=50)))
+#all the values of nmut that would like to evaluate
+n<-c(0,10,20,30,40,50,60,70,80,90,100)
+#run replicate command to all those values
+myfunc_rep <-function (nmut){mean (replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=50)))}
+#test the BLASTs result
+finalres <-sapply(n,myfunc_rep)
+finalres
 
-myEcolimutator <- mutator(myEcoli,40)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+#Follow same method for full sequence
+myfunc(myseq=myEcoli,nmut=276)
+replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=276))
+mean (replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=276)))
+n<-c(0,10,20,30,40,50,60,70,80,90,100)
+myfunc_rep <-function (nmut){mean (replicate(n=100,expr = myfunc(myseq=myEcoli,nmut=276)))}
+finalres <-sapply(n,myfunc_rep)
+finalres
 
-myEcolimutator <- mutator(myEcoli,50)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+#Question 6
 
-myEcolimutator <- mutator(myEcoli,60)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+Bdata <- c(0,10,20,30,40,50,60,70,80,90,100)
+Bdata <- as.data.frame(Bdata)
+Bdata
+Bdata$repsite<-c(1,1,1,0.95,0.75,0.49,0.25,0.12,0.05,0.02,0.01)
+Bdata
+plot(Bdata, type="b", col="red",col.main="blue", col.sub="green",
+     main="How increasing no.random bases affects BLAST performance",sub="100 repeates,using sequence number 56",
+     xlab="Number of site randomised", ylab="Propotion of successful BLASTs"
+     )
 
-myEcolimutator <- mutator(myEcoli,65)
-res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
-res
+
+
 
