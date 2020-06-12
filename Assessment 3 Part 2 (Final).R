@@ -42,37 +42,55 @@ res<-myblastn_tab(myseq = myEcoli,db= "Escherichia_coli_str_k_12_substr_mg1655.A
 head(res)
 str(res)
 
-#first three hits
+#identify what E.coil gene matches best and the top 3 hits
 hits <-as.character(res$sseqid[1:3])
 hits
+# show a percent identity, E-value and bit scores of the top 3 hits
+tophits <- db[which(names(db) %in% hits[1:3])]
+tophits[1:3]
 
-#identify what E.coil gene matches best and the tophits
-db <- read.fasta("Escherichia_coli_str_k_12_substr_mg1655.ASM584v2.cds.all.fa")
-str(db)
-head(names(db))
-myseqs <- db[which(names(db) %in% hits)] # extract the names of the top hits
-myseqs <- c(myseqs,Ecoli) # add the Ecoli sequence
-seqinr::write.fasta(myseqs,names=names(myseqs),file.out = "myseqs.fa")
-
-#extract the names of the top hit percent identity, E-value and bit score
-tophits <- db[which(names(db) %in% hits[1])]
-tophit[1:3]
+#create a Blast database
 seqinr::write.fasta(tophit,names=names(tophit),file.out = "tophit.fa")
 makeblastdb("tophit.fa", dbtype = "nucl","-parse_seqids")
 res <- myblastn(myseq = myEcoli, db= "tophit.fa")
 res
 cat(res,fill=TRUE)
 
-
 #Question 4
 
 #create a mutated copy with 30 substitutions
 myEcolimutator<- mutator(myEcoli,30)
+#chech number of mismatches between the original and mutated sequence
 res <- myblastn_tab(myseq = myEcolimutator, db= "tophit.fa")
 res
 
-
 #Question 5 
+
+#test with mismatches
+myEcolimutator <- mutator(myEcoli,10)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,20)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,30)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,40)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,50)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,60)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,70)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
+myEcolimutator <- mutator(myEcoli,80)
+res<-myblastn_tab(myseq = myEcolimutator,db= "myEcoli.fa")
+res
 
 mutator #randomize with mutator
 myblastn_tab
@@ -108,16 +126,13 @@ finalres
 
 #Question 6
 
+#create a table to show increasing propotion of mutated bases reduce the ability for BLAST
 Bdata <- c(0,10,20,30,40,50,60,70,80,90,100)
 Bdata <- as.data.frame(Bdata)
-Bdata
 Bdata$repsite<-c(1,1,1,0.95,0.75,0.49,0.25,0.12,0.05,0.02,0.01)
 Bdata
+##create a graph to show increasing propotion of mutated bases reduce the ability for BLAST
 plot(Bdata, type="b", col="red",col.main="blue", col.sub="green",
      main="How increasing no.random bases affects BLAST performance",sub="100 repeates,using sequence number 56",
      xlab="Number of site randomised", ylab="Propotion of successful BLASTs"
      )
-
-
-
-
